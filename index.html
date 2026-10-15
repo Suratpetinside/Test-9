@@ -380,37 +380,27 @@
                     </div>
                 </div>
 
-                <!-- ตาราง SOAP และประวัติการรักษา (Patient History) -->
+               <!-- ตารางประวัติการรักษา (Patient History) - ปรับตำแหน่งจัดวางเรียบร้อย (วันที่ ซ้ายสุด | รายละเอียด ตรงกลาง | Price ขวาสุด) และลบคอลัมน์ SOAP ออก -->
                 <div class="border border-black rounded-lg overflow-hidden">
                     <div class="bg-gray-100 font-bold text-center border-b border-black py-1.5 text-[11px]">
-                        ประวัติสัตว์ป่วย (Patient History) / SOAP Note
+                        ประวัติสัตว์ป่วย (Patient History)
                     </div>
-                    <div class="grid grid-cols-12 border-b border-black text-center font-bold text-[10px] bg-gray-50">
+                    <div class="grid grid-cols-11 border-b border-black text-center font-bold text-[10px] bg-gray-50">
                         <div class="col-span-2 border-r border-black py-1.5">วันที่ (Date)</div>
                         <div class="col-span-8 border-r border-black py-1.5">รายละเอียดอาการ / การวินิจฉัย / การรักษา</div>
                         <div class="col-span-1 py-1.5">Price</div>
                     </div>
-                    <!-- แถวบันทึกข้อมูลหลัก -->
-                    <div class="grid grid-cols-12 text-[11px] min-h-[140px] items-stretch border-b border-black">
+                    <!-- แถวบันทึกข้อมูลหลัก (มี 1 แถว จัดวางตำแหน่งถูกต้อง) -->
+                    <div class="grid grid-cols-11 text-[11px] min-h-[140px] items-stretch">
                         <div id="printDate" class="col-span-2 border-r border-black p-2 text-center font-medium flex items-center justify-center bg-gray-50/50">15 ต.ค. 2026</div>
-                        <div class="col-span-1 border-r border-black p-2 text-center font-bold text-[#2D6A4F] flex flex-col items-center justify-center bg-emerald-50/30">
-                            <span>S/O</span>
-                            <span class="text-[10px] text-gray-400 my-0.5">|</span>
-                            <span>A/P</span>
-                        </div>
                         <div class="col-span-8 border-r border-black p-2 flex items-center">
-                            <textarea id="docNoteInput" rows="5" placeholder="กรอกอาการ ผลตรวจ การวินิจฉัย และคำแนะนำ (SOAP)..." class="w-full p-2 bg-white border border-dashed border-gray-300 rounded-md focus:border-[#2D6A4F] focus:outline-none resize-none text-xs text-black shadow-inner"></textarea>
+                            <textarea id="docNoteInput" rows="5" placeholder="กรอกอาการ ผลตรวจ การวินิจฉัย และคำแนะนำ..." class="w-full p-2 bg-white border border-dashed border-gray-300 rounded-md focus:border-[#2D6A4F] focus:outline-none resize-none text-xs text-black shadow-inner"></textarea>
                         </div>
                         <div class="col-span-1 p-1 text-center flex items-center justify-center bg-emerald-50/20">
                             <input type="text" id="docPriceInput" value="300" placeholder="ราคา" class="w-full text-center p-2 bg-white border border-gray-300 rounded-md focus:border-[#2D6A4F] focus:outline-none text-xs text-black font-bold shadow-inner">
                         </div>
                     </div>
-                    <!-- แถวว่างสำรองแบบฟอร์มกระดาษจริง -->
-                    <div class="grid grid-cols-12 text-[11px] h-8 border-b border-black">
-                        <div class="col-span-2 border-r border-black"></div>
-                        <div class="col-span-1 border-r border-black"></div>
-                        <div class="col-span-8 border-r border-black"></div>
-                        <div class="col-span-1"></div>
+                </div>
                     </div>
                 </div>
             </div>
