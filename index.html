@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>นิธิพันธ์สัตวแพทย์ - ระบบจัดการคิวและตารางนัดหมาย</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Font (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                background: white !important;
+                box-shadow: none; 
+                border: none;
+                padding: 10px;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#F4F7F4] text-[#1E3A2F] min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-[#E2EBE5] border-b border-[#C8DCD0] px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#2D6A4F] flex items-center justify-center text-white font-bold shadow-sm">
+                🐾
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-[#1B4332]">นิธิพันธ์สัตวแพทย์</h1>
+                <p class="text-xs text-[#40916C]">ระบบจัดการคิวและตารางนัดหมายอัจฉริยะ</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4 text-sm">
+            <!-- ปุ่มสลับหน้าเว็บ (คิว / คนไข้) -->
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('queue')" id="btnQueueTab" class="px-4 py-1.5 rounded-full font-medium transition cursor-pointer bg-[#2D6A4F] text-white shadow-sm text-xs">
+                    📅 จัดการคิว
+                </button>
+                <button onclick="switchTab('patients')" id="btnPatientTab" class="px-4 py-1.5 rounded-full font-medium transition cursor-pointer bg-white/90 text-[#2D6A4F] border border-[#C8DCD0] text-xs hover:bg-[#F0F5F1]">
+                    🐶 รายชื่อคนไข้
+                </button>
+            </div>
+
+            <!-- ช่องเลือกวันที่หลักของระบบ (แสดงเฉพาะหน้าคิว) -->
+            <div id="dateFilterWrapper" class="bg-white/90 border border-[#C8DCD0] px-4 py-1.5 rounded-full text-[#2D6A4F] font-medium shadow-sm flex items-center gap-2">
+                <span>📅</span> 
+                <span>เลือกวันที่:</span>
+                <input type="date" id="filterDate" value="2026-10-15" onchange="currentPage=1; renderTable()" class="bg-transparent text-[#1B4332] font-bold focus:outline-none cursor-pointer">
+            </div>
+            <div class="text-[#2D6A4F] font-medium hidden sm:block">
+                ผู้ใช้งาน : <span class="font-bold text-[#1B4332]">ฝ่ายเวชระเบียน</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+        
+        <!-- ================= SECTION 1: หน้าจัดการคิว ================= -->
+        <div id="sectionQueue" class="flex flex-col gap-6 flex-1">
+            <!-- Top Toolbar: Search & Action -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#D8E6DD]">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">🔍</span>
+                    <input type="text" id="searchInput" onkeyup="currentPage=1; renderTable()" placeholder="ค้นหาชื่อสัตว์เลี้ยง / เจ้าของ / เบอร์โทร" class="w-full pl-10 pr-4 py-2.5 bg-[#F8FAF8] border border-[#D8E6DD] rounded-xl text-sm focus:outline-none focus:border-[#2D6A4F] text-[#1B4332]">
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <button onclick="openAddModal()" class="bg-[#2D6A4F] hover:bg-[#1B4332] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <span class="text-lg leading-none">+</span> เพิ่มนัดหมายใหม่
+                    </button>
+                    <button onclick="refreshData()" class="p-2.5 bg-[#F0F5F1] hover:bg-[#E2EBE5] border border-[#D8E6DD] rounded-xl text-[#2D6A4F] transition cursor-pointer" title="รีเฟรชข้อมูล">
+                        🔄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Summary Bar -->
+            <div class="flex flex-wrap items-center space-x-2 text-sm bg-[#E9F2EC] px-4 py-3 rounded-xl border border-[#C8DCD0] text-[#1B4332]">
+                <span class="text-base">📌</span>
+                <span class="font-semibold mr-2">สรุปสถานะวันที่เลือก :</span>
+                <span onclick="filterByStatus('ทั้งหมด')" id="filterAll" class="cursor-pointer px-2.5 py-1 rounded-lg bg-[#2D6A4F] text-white font-medium text-xs transition">ทั้งหมด</span> | 
+                <span onclick="filterByStatus('รอเข้ารับบริการ')" id="filterPending" class="cursor-pointer px-2.5 py-1 rounded-lg hover:bg-white/60 text-[#52B788] font-medium transition">รอดำเนินการ (<span id="countPending">0</span>)</span> | 
+                <span onclick="filterByStatus('กำลังตรวจ')" id="filterChecking" class="cursor-pointer px-2.5 py-1 rounded-lg hover:bg-white/60 text-[#2D6A4F] font-medium transition">กำลังตรวจ (<span id="countChecking">0</span>)</span> | 
+                <span onclick="filterByStatus('เสร็จสิ้น')" id="filterDone" class="cursor-pointer px-2.5 py-1 rounded-lg hover:bg-white/60 text-[#1B4332] font-medium transition">เสร็จสิ้น (<span id="countDone">0</span>)</span> | 
+                <span onclick="filterByStatus('ยกเลิก')" id="filterCancel" class="cursor-pointer px-2.5 py-1 rounded-lg hover:bg-white/60 text-gray-500 font-medium transition">ยกเลิก (<span id="countCancel">0</span>)</span>
+            </div>
+
+            <!-- Queue Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-[#D8E6DD] overflow-hidden flex-1 flex flex-col">
+                <div class="overflow-x-auto flex-1">
+                    <table id="queueTable" class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#E9F2EC] text-[#1B4332] text-xs uppercase tracking-wider border-b border-[#D8E6DD]">
+                                <th class="py-3.5 px-4 font-semibold">🕒 เวลา</th>
+                                <th class="py-3.5 px-4 font-semibold">🐾 ชื่อสัตว์เลี้ยง/สายพันธุ์</th>
+                                <th class="py-3.5 px-4 font-semibold">👤 ชื่อเจ้าของ / เบอร์โทร</th>
+                                <th class="py-3.5 px-4 font-semibold">📋 ประเภทบริการ</th>
+                                <th class="py-3.5 px-4 font-semibold">🩺 สัตวแพทย์ผู้ตรวจ</th>
+                                <th class="py-3.5 px-4 font-semibold">📊 สถานะคิว</th>
+                                <th class="py-3.5 px-4 font-semibold text-center">⚙️ การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-[#E9F2EC] text-sm text-[#1E3A2F]">
+                            <!-- ข้อมูลเรนเดอร์ผ่าน JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="p-4 border-t border-[#D8E6DD] flex items-center justify-between text-xs text-gray-500 bg-[#FAFCFA]">
+                    <span id="recordCount">แสดงข้อมูลทั้งหมดในระบบ</span>
+                    <div id="paginationContainer" class="flex space-x-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 2: หน้าข้อมูลรายชื่อคนไข้ ================= -->
+        <div id="sectionPatients" class="flex flex-col gap-6 flex-1 hidden">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-[#D8E6DD]">
+                <div class="relative w-full md:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">🔍</span>
+                    <input type="text" id="searchPatientInput" onkeyup="renderPatientTable()" placeholder="ค้นหาชื่อน้อง / เจ้าของ / พันธุ์" class="w-full pl-10 pr-4 py-2.5 bg-[#F8FAF8] border border-[#D8E6DD] rounded-xl text-sm focus:outline-none focus:border-[#2D6A4F] text-[#1B4332]">
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <button onclick="openPatientModal()" class="bg-[#2D6A4F] hover:bg-[#1B4332] text-white px-5 py-2.5 rounded-xl text-sm font-medium transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <span class="text-lg leading-none">+</span> เพิ่มสมาชิกคนไข้
+                    </button>
+                    <span class="text-xs text-[#2D6A4F] font-medium hidden sm:inline-block">🗂️ ฐานข้อมูลเวชระเบียนสัตว์เลี้ยงทั้งหมด</span>
+                </div>
+            </div>
+
+            <!-- Patient Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-[#D8E6DD] overflow-hidden flex-1 flex flex-col">
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#E9F2EC] text-[#1B4332] text-xs uppercase tracking-wider border-b border-[#D8E6DD]">
+                                <th class="py-3.5 px-4 font-semibold">📷 รูปน้อง</th>
+                                <th class="py-3.5 px-4 font-semibold">🐾 ชื่อสัตว์เลี้ยง</th>
+                                <th class="py-3.5 px-4 font-semibold">📋 พันธุ์</th>
+                                <th class="py-3.5 px-4 font-semibold">👤 ชื่อเจ้าของ / เบอร์โทร</th>
+                                <th class="py-3.5 px-4 font-semibold">🎂 อายุ</th>
+                                <th class="py-3.5
