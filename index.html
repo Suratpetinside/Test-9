@@ -51,11 +51,11 @@
                 </button>
             </div>
 
-            <!-- ช่องเลือกวันที่หลักของระบบ (แสดงเฉพาะหน้าคิว) -->
+            <!-- ช่องเลือกวันที่หลักของระบบ (Default วันนี้อัตโนมัติ) -->
             <div id="dateFilterWrapper" class="bg-white/90 border border-[#C8DCD0] px-4 py-1.5 rounded-full text-[#2D6A4F] font-medium shadow-sm flex items-center gap-2">
                 <span>📅</span> 
                 <span>เลือกวันที่:</span>
-                <input type="date" id="filterDate" value="2026-10-15" onchange="currentPage=1; renderTable()" class="bg-transparent text-[#1B4332] font-bold focus:outline-none cursor-pointer">
+                <input type="date" id="filterDate" onchange="currentPage=1; renderTable()" class="bg-transparent text-[#1B4332] font-bold focus:outline-none cursor-pointer">
             </div>
             <div class="text-[#2D6A4F] font-medium hidden sm:block">
                 ผู้ใช้งาน : <span class="font-bold text-[#1B4332]">ฝ่ายเวชระเบียน</span>
@@ -279,7 +279,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-gray-600 text-xs mb-1 font-medium">🎂 วันเกิดสัตว์เลี้ยง</label>
-                        <input type="date" id="inputPatientBirthDate" value="2023-10-15" class="w-full p-2.5 border border-[#D8E6DD] rounded-xl focus:outline-none focus:border-[#2D6A4F] text-[#1B4332] bg-white cursor-pointer">
+                        <input type="date" id="inputPatientBirthDate" class="w-full p-2.5 border border-[#D8E6DD] rounded-xl focus:outline-none focus:border-[#2D6A4F] text-[#1B4332] bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-gray-600 text-xs mb-1 font-medium">⚧ เพศ</label>
@@ -429,6 +429,19 @@
 
     <!-- JavaScript -->
     <script>
+        // ฟังก์ชันดึงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
+        function getTodayDateString() {
+            let now = new Date();
+            let yyyy = now.getFullYear();
+            let mm = String(now.getMonth() + 1).padStart(2, '0');
+            let dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // กำหนดค่า Default วันที่ปัจจุบันให้กับช่องเลือกวันที่หลักทันทีเมื่อโหลดหน้าเว็บ
+        document.getElementById('filterDate').value = getTodayDateString();
+        document.getElementById('inputPatientBirthDate').value = getTodayDateString();
+
         let patients = [
             { 
                 hn: "6910001",
@@ -463,13 +476,17 @@
         ];
 
         let appointments = [
-            { date: "2026-10-15", time: "10:00-12:00", hn: "6910001", service: "🩺 ตรวจสุขภาพประจำปี", doctor: "นพ.สพ.สมชาย", status: "เสร็จสิ้น" },
-            { date: "2026-10-15", time: "15:00-18:00", hn: "6910002", service: "💉 ฉีดวัคซีนรวม", doctor: "สพ.ญ.วิไล", status: "กำลังตรวจ" }
+            { date: getTodayDateString(), time: "10:00-12:00", hn: "6910001", service: "🩺 ตรวจสุขภาพประจำปี", doctor: "นพ.สพ.สมชาย", status: "เสร็จสิ้น" },
+            { date: getTodayDateString(), time: "15:00-18:00", hn: "6910002", service: "💉 ฉีดวัคซีนรวม", doctor: "สพ.ญ.วิไล", status: "กำลังตรวจ" }
         ];
 
         let currentStatusFilter = 'ทั้งหมด';
         let currentPage = 1;
         const rowsPerPage = 10;
+
+        function logActivityToSheet(action, details, hn = "-", service = "-", status = "-") {
+            console.log(`[Google Sheets Backup Log] | Action: ${action} | Details: ${details} | HN: ${hn} | Service: ${service} | Status: ${status}`);
+        }
 
         function switchTab(tab) {
             const btnQueue = document.getElementById('btnQueueTab');
@@ -498,7 +515,7 @@
         function calculateAge(birthDateStr) {
             if (!birthDateStr) return "1 ปี";
             let birthDate = new Date(birthDateStr);
-            let today = new Date("2026-10-16");
+            let today = new Date();
             let years = today.getFullYear() - birthDate.getFullYear();
             let months = today.getMonth() - birthDate.getMonth();
             if (months < 0 || (months === 0 && today.getDate() < birthDate.getDate())) {
@@ -558,7 +575,7 @@
             });
         }
 
-        // จัดการแปลงไฟล์รูปภาพที่อัปโหลดเป็น Base64
+        // แปลงไฟล์รูปภาพเป็น Base64
         document.getElementById('inputPatientFile').addEventListener('change', function(e) {
             let file = e.target.files[0];
             if (file) {
@@ -580,6 +597,7 @@
                 document.getElementById('inputPatientOwner').value = "";
                 document.getElementById('inputPatientSubdistrict').value = "";
                 document.getElementById('inputPatientWeight').value = "";
+                document.getElementById('inputPatientBirthDate').value = getTodayDateString();
                 document.getElementById('inputPatientImgBase64').value = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
             } else {
                 let p = patients[index];
@@ -603,20 +621,18 @@
             document.getElementById('patient-modal').classList.add('hidden');
         }
 
-        // ฟังก์ชันสร้างเลข HN รูปแบบ YYMMXXX (เช่น 6910001)
         function generateNewHN() {
             let now = new Date();
-            let thaiYear = now.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
-            let yy = String(thaiYear).slice(-2); // เอาเลขท้าย 2 ตัว เช่น 2569 -> 69
-            let mm = String(now.getMonth() + 1).padStart(2, '0'); // เดือน 2 หลัก เช่น 10
-            let prefix = yy + mm; // ได้ 6910
+            let thaiYear = now.getFullYear() + 543;
+            let yy = String(thaiYear).slice(-2);
+            let mm = String(now.getMonth() + 1).padStart(2, '0');
+            let prefix = yy + mm;
 
-            // กรองหา HN ที่ขึ้นต้นด้วยปีและเดือนปัจจุบัน เพื่อหารันนิ่งเบอร์ล่าสุด
             let currentMonthPatients = patients.filter(p => p.hn && p.hn.startsWith(prefix));
             let nextSeq = currentMonthPatients.length + 1;
-            let xxx = String(nextSeq).padStart(3, '0'); // 3 หลัก เช่น 001, 002
+            let xxx = String(nextSeq).padStart(3, '0');
 
-            return prefix + xxx; // ผลลัพธ์ 6910001
+            return prefix + xxx;
         }
 
         function savePatient() {
@@ -655,6 +671,7 @@
                     weight: weight,
                     history: []
                 });
+                logActivityToSheet("CREATE_PATIENT", `เพิ่มคนไข้ใหม่ ${name} (${breed}) เจ้าของ ${ownerName}`, newHN, "เวชระเบียน", "สำเร็จ");
                 alert(`สร้างสมาชิกใหม่สำเร็จ! เลขประจำตัว HN: ${newHN}`);
             } else {
                 let p = patients[editIndex];
@@ -668,6 +685,7 @@
                 p.gender = gender;
                 p.weight = weight;
                 p.img = img;
+                logActivityToSheet("UPDATE_PATIENT", `แก้ไขข้อมูลคนไข้ ${name}`, p.hn, "เวชระเบียน", "สำเร็จ");
                 alert('อัปเดตข้อมูลคนไข้เรียบร้อยแล้ว!');
             }
 
@@ -768,8 +786,10 @@
             if(editIndex === -1) {
                 appointments.unshift(newItem);
                 currentPage = 1;
+                logActivityToSheet("CREATE_APPOINTMENT", `เพิ่มนัดหมายใหม่ วันที่ ${date}`, selectedHN, service, status);
             } else {
                 appointments[editIndex] = newItem;
+                logActivityToSheet("UPDATE_APPOINTMENT", `แก้ไขนัดหมาย วันที่ ${date}`, selectedHN, service, status);
             }
 
             document.getElementById('filterDate').value = date;
@@ -858,6 +878,7 @@
         function deleteAppointment(index) {
             if(confirm('คุณต้องการเปลี่ยนสถานะรายการนี้เป็น "ยกเลิก" ใช่หรือไม่?')) {
                 appointments[index].status = "ยกเลิก";
+                logActivityToSheet("CANCEL_APPOINTMENT", `ยกเลิกนัดหมาย`, appointments[index].hn, appointments[index].service, "ยกเลิก");
                 renderTable();
             }
         }
@@ -927,6 +948,7 @@
                 });
             }
 
+            logActivityToSheet("DOCTOR_LOG", `บันทึกผลตรวจ: ${note}`, item.hn, item.service, `เสร็จสิ้น (ค่ารักษา: ${price} บาท)`);
             alert('บันทึกประวัติการรักษาและอัปเดตเวชระเบียนเรียบร้อยแล้ว!');
             closeDoctorLogModal();
             renderTable();
