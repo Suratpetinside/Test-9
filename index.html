@@ -269,8 +269,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-gray-600 text-xs mb-1 font-medium">🎂 อายุ</label>
-                        <input type="text" id="inputPatientAge" placeholder="เช่น 3 ปี" class="w-full p-2.5 border border-[#D8E6DD] rounded-xl focus:outline-none focus:border-[#2D6A4F] text-[#1B4332]">
+                        <label class="block text-gray-600 text-xs mb-1 font-medium">🎂 วันเกิดสัตว์เลี้ยง (คำนวณอายุอัตโนมัติ)</label>
+                        <input type="date" id="inputPatientBirthDate" class="w-full p-2.5 border border-[#D8E6DD] rounded-xl focus:outline-none focus:border-[#2D6A4F] text-[#1B4332] bg-white cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-gray-600 text-xs mb-1 font-medium">⚧ เพศ</label>
@@ -311,7 +311,12 @@
                         <p id="historyOwnerInfo" class="text-xs text-gray-500">-</p>
                     </div>
                 </div>
-                <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer">✕</button>
+                <div class="flex items-center gap-2">
+                    <button id="btnEditPatientFromHistory" onclick="" class="px-3 py-1.5 bg-[#E9F2EC] hover:bg-[#D8E6DD] text-[#2D6A4F] rounded-xl text-xs font-medium transition cursor-pointer flex items-center gap-1">
+                        ✏️ แก้ไขข้อมูล
+                    </button>
+                    <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold cursor-pointer">✕</button>
+                </div>
             </div>
             
             <div class="mb-2">
@@ -455,7 +460,7 @@
                 owner: "คุณสมชาย", 
                 phone: "081-234-5678",
                 address: "อำเภอเมืองสุราษฎร์ธานี",
-                age: "3 ปี", 
+                birthDate: "2023-10-15", 
                 gender: "ผู้ (ทำหมันแล้ว)", 
                 weight: "5.2 กก.",
                 history: [
@@ -471,7 +476,7 @@
                 owner: "คุณหญิง", 
                 phone: "089-999-8888",
                 address: "อำเภอพุนพิน",
-                age: "2 ปี", 
+                birthDate: "2024-10-15", 
                 gender: "เมีย", 
                 weight: "3.8 กก.",
                 history: [
@@ -486,7 +491,7 @@
                 owner: "คุณมาศ", 
                 phone: "085-555-4444",
                 address: "อำเภอเวียงสระ",
-                age: "5 ปี", 
+                birthDate: "2021-10-15", 
                 gender: "ผู้", 
                 weight: "4.5 กก.",
                 history: [
@@ -501,7 +506,7 @@
                 owner: "คุณปู", 
                 phone: "083-111-2233",
                 address: "อำเภอเกาะสมุย",
-                age: "4 ปี", 
+                birthDate: "2022-10-15", 
                 gender: "ผู้", 
                 weight: "28.0 กก.",
                 history: [
@@ -516,7 +521,7 @@
                 owner: "คุณกอล์ฟ", 
                 phone: "082-333-4455",
                 address: "อำเภอพนม",
-                age: "1 ปี 6 เดือน", 
+                birthDate: "2025-04-15", 
                 gender: "เมีย", 
                 weight: "9.1 กก.",
                 history: [
@@ -531,7 +536,7 @@
                 owner: "คุณแนน", 
                 phone: "081-888-9911",
                 address: "อำเภอเคียนซา",
-                age: "2 ปี", 
+                birthDate: "2024-10-15", 
                 gender: "ผู้ (ทำหมันแล้ว)", 
                 weight: "21.5 กก.",
                 history: [
@@ -568,6 +573,29 @@
             }
         }
 
+        // ฟังก์ชันคำนวณอายุอัตโนมัติตามปีปัจจุบัน (ปี 2026)
+        function calculateAge(birthDateStr) {
+            if (!birthDateStr) return "3 ปี";
+            let birthDate = new Date(birthDateStr);
+            let today = new Date("2026-10-16");
+            
+            let years = today.getFullYear() - birthDate.getFullYear();
+            let months = today.getMonth() - birthDate.getMonth();
+            
+            if (months < 0 || (months === 0 && today.getDate() < birthDate.getDate())) {
+                years--;
+                months += 12;
+            }
+            
+            if (years === 0) {
+                return `${months} เดือน`;
+            } else if (months === 0) {
+                return `${years} ปี`;
+            } else {
+                return `${years} ปี ${months} เดือน`;
+            }
+        }
+
         function renderPatientTable() {
             const tbody = document.getElementById('patientTableBody');
             const search = document.getElementById('searchPatientInput').value.toLowerCase();
@@ -589,6 +617,8 @@
 
             filtered.forEach(p => {
                 let realIndex = patients.indexOf(p);
+                let computedAge = p.birthDate ? calculateAge(p.birthDate) : (p.age || "3 ปี");
+
                 let tr = document.createElement('tr');
                 tr.className = "hover:bg-[#F8FAF8] transition";
                 tr.innerHTML = `
@@ -600,11 +630,12 @@
                     <td class="py-3.5 px-4 text-gray-600">${p.breed}</td>
                     <td class="py-3.5 px-4 text-gray-600">${p.owner} (${p.phone})</td>
                     <td class="py-3.5 px-4 font-medium text-emerald-800">${p.address || 'อำเภอเมืองสุราษฎร์ธานี'}</td>
-                    <td class="py-3.5 px-4 text-gray-600">${p.age}</td>
+                    <td class="py-3.5 px-4 text-gray-600 font-medium text-[#2D6A4F]">${computedAge}</td>
                     <td class="py-3.5 px-4 text-gray-600">${p.gender}</td>
                     <td class="py-3.5 px-4 font-semibold text-[#2D6A4F]">${p.weight}</td>
                     <td class="py-3.5 px-4 text-center space-x-1">
                         <button onclick="openHistoryModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-emerald-700 transition cursor-pointer" title="ประวัติการรักษา">📋</button>
+                        <button onclick="openPatientModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-gray-600 transition cursor-pointer" title="แก้ไขข้อมูลคนไข้">✏️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -616,6 +647,9 @@
             document.getElementById('historyPetImg').src = p.img;
             document.getElementById('historyPetName').innerText = `${p.name} (${p.breed}) [${p.hn || 'HN-65024'}]`;
             document.getElementById('historyOwnerInfo').innerText = `เจ้าของ: ${p.owner} | เบอร์โทร: ${p.phone} | ที่อยู่: ${p.address || 'อำเภอเมืองสุราษฎร์ธานี'}`;
+            
+            // ผูกปุ่มแก้ไขข้อมูลคนไข้จาก Modal ประวัติ
+            document.getElementById('btnEditPatientFromHistory').setAttribute('onclick', `closeHistoryModal(); openPatientModal(${index});`);
 
             let container = document.getElementById('historyListContainer');
             container.innerHTML = '';
@@ -650,7 +684,92 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        // --- ฟังก์ชันสำหรับสมุดจดประวัติการรักษาของสัตวแพทย์ (เชื่อม HN และ อำเภอ จากหน้าคนไข้แบบ Identity พร้อมจำค่าคงค้างในฟอร์ม) ---
+        function openPatientModal(index = -1) {
+            document.getElementById('editPatientIndex').value = index;
+            if(index === -1) {
+                document.getElementById('patientModalTitle').innerText = "เพิ่มสมาชิกคนไข้ใหม่";
+                document.getElementById('inputPatientName').value = "";
+                document.getElementById('inputPatientBreed').value = "";
+                document.getElementById('inputPatientOwner').value = "";
+                document.getElementById('inputPatientBirthDate').value = "2023-10-15";
+                document.getElementById('inputPatientWeight').value = "";
+                document.getElementById('inputPatientImg').value = "";
+            } else {
+                let p = patients[index];
+                document.getElementById('patientModalTitle').innerText = "แก้ไขข้อมูลสมาชิกคนไข้";
+                document.getElementById('inputPatientName').value = p.name;
+                document.getElementById('inputPatientBreed').value = p.breed;
+                document.getElementById('inputPatientOwner').value = `${p.owner} (${p.phone})`;
+                document.getElementById('inputPatientAddress').value = p.address || "อำเภอเมืองสุราษฎร์ธานี";
+                document.getElementById('inputPatientBirthDate').value = p.birthDate || "2023-10-15";
+                document.getElementById('inputPatientGender').value = p.gender;
+                document.getElementById('inputPatientWeight').value = p.weight;
+                document.getElementById('inputPatientImg').value = p.img;
+            }
+            document.getElementById('patient-modal').classList.remove('hidden');
+            document.getElementById('patient-modal').classList.add('flex');
+        }
+
+        function closePatientModal() {
+            document.getElementById('patient-modal').classList.remove('flex');
+            document.getElementById('patient-modal').classList.add('hidden');
+        }
+
+        function savePatient() {
+            let editIndex = parseInt(document.getElementById('editPatientIndex').value);
+            let name = document.getElementById('inputPatientName').value.trim();
+            let breed = document.getElementById('inputPatientBreed').value.trim();
+            let ownerFull = document.getElementById('inputPatientOwner').value.trim();
+            let address = document.getElementById('inputPatientAddress').value;
+            let birthDate = document.getElementById('inputPatientBirthDate').value;
+            let gender = document.getElementById('inputPatientGender').value;
+            let weight = document.getElementById('inputPatientWeight').value.trim();
+            let img = document.getElementById('inputPatientImg').value.trim() || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
+
+            if(!name || !ownerFull) {
+                alert('กรุณากรอกชื่อสัตว์เลี้ยงและชื่อเจ้าของให้ครบถ้วน');
+                return;
+            }
+
+            let ownerName = ownerFull.split('(')[0].trim();
+            let ownerPhone = ownerFull.includes('(') ? ownerFull.split('(')[1].replace(')', '').trim() : '-';
+            let computedAgeStr = calculateAge(birthDate);
+
+            if(editIndex === -1) {
+                patients.unshift({
+                    hn: `HN-${Math.floor(65030 + Math.random() * 1000)}`,
+                    img: img,
+                    name: name,
+                    breed: breed,
+                    owner: ownerName,
+                    phone: ownerPhone,
+                    address: address,
+                    birthDate: birthDate,
+                    age: computedAgeStr,
+                    gender: gender,
+                    weight: weight,
+                    history: []
+                });
+            } else {
+                let p = patients[editIndex];
+                p.name = name;
+                p.breed = breed;
+                p.owner = ownerName;
+                p.phone = ownerPhone;
+                p.address = address;
+                p.birthDate = birthDate;
+                p.age = computedAgeStr;
+                p.gender = gender;
+                p.weight = weight;
+                p.img = img;
+            }
+
+            closePatientModal();
+            renderPatientTable();
+            alert('บันทึกข้อมูลคนไข้เรียบร้อยแล้ว!');
+        }
+
+        // --- ฟังก์ชันสำหรับสมุดจดประวัติการรักษาของสัตวแพทย์ ---
         function openDoctorLogModal(index) {
             let item = appointments[index];
             document.getElementById('docQueueIndex').value = index;
@@ -660,9 +779,8 @@
             let ownerName = item.owner.split('(')[0].trim();
             let ownerPhone = item.owner.includes('(') ? item.owner.split('(')[1].replace(')', '').trim() : '-';
 
-            // ค้นหาข้อมูลเชื่อมโยงจากตารางคนไข้ (Patients) แบบ Real-time
             let foundP = patients.find(p => p.name.includes(petName));
-            let ageStr = foundP ? foundP.age : '1 ปี';
+            let ageStr = foundP ? (foundP.birthDate ? calculateAge(foundP.birthDate) : foundP.age) : '1 ปี';
             let genderStr = foundP ? foundP.gender : '♂N';
             let addressStr = foundP && foundP.address ? foundP.address : 'อำเภอเมืองสุราษฎร์ธานี';
             let hnStr = foundP && foundP.hn ? foundP.hn : 'HN-65024';
@@ -678,7 +796,6 @@
             document.getElementById('pDoctor').innerText = `${item.doctor}`;
             document.getElementById('printDate').innerText = item.date || "15 ต.ค. 2026";
             
-            // ดึงข้อความและราคาที่เคยบันทึกไว้ค้างในฟอร์มกลับมาแสดง (ถ้ามี)
             document.getElementById('docNoteInput').value = item.savedNote || "";
             document.getElementById('docPriceInput').value = item.savedPrice || "300";
 
@@ -704,7 +821,6 @@
             let item = appointments[index];
             let petName = item.pet.split('(')[0].trim();
             
-            // ⭐ บันทึกค่าเก็บไว้ที่ตัว item ของคิว เพื่อให้ข้อความยังค้างอยู่ในฟอร์มเวลาเปิดดูซ้ำ
             item.savedNote = note;
             item.savedPrice = price;
             
@@ -719,7 +835,6 @@
             let foundPatient = patients.find(p => p.name.includes(petName));
             if(foundPatient) {
                 if(!foundPatient.history) foundPatient.history = [];
-                // เช็คว่าถ้าเคยบันทึกประวัติของวันเดียวกันและบริการเดียวกัน ให้ทับตัวล่าสุดแทนการเบิ้ลซ้ำ
                 let existingIndex = foundPatient.history.findIndex(h => h.date === item.date && h.service === item.service);
                 if(existingIndex !== -1) {
                     foundPatient.history[existingIndex] = newHistoryItem;
@@ -735,6 +850,7 @@
                     owner: item.owner.split('(')[0].trim(),
                     phone: item.owner.includes('(') ? item.owner.split('(')[1].replace(')', '').trim() : '-',
                     address: "อำเภอเมืองสุราษฎร์ธานี",
+                    birthDate: "2024-01-01",
                     age: '1 ปี',
                     gender: 'ผู้',
                     weight: '5.0 กก.',
