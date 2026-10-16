@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไขรายชื่อคนไข้ (พร้อมอัปโหลดรูปภาพ และเลือกตำบล/อำเภอ) -->
+    <!-- Modal เพิ่ม/แก้ไขรายชื่อคนไข้ -->
     <div id="patient-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#D8E6DD] my-8">
             <div class="flex justify-between items-center mb-4">
@@ -424,14 +424,14 @@
 
     <!-- Footer -->
     <footer class="text-center py-4 text-xs text-[#52B788] bg-[#E2EBE5]/50 border-t border-[#C8DCD0]">
-        Nitiphan Animal Clinic Management System • Upload Image & Subdistrict Added
+        Nitiphan Animal Clinic Management System • Dynamic YYMMXXX HN Generation
     </footer>
 
     <!-- JavaScript -->
     <script>
         let patients = [
             { 
-                hn: "HN-65024",
+                hn: "6910001",
                 img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop", 
                 name: "น้องหมีพู", 
                 breed: "ชิทู", 
@@ -447,7 +447,7 @@
                 ]
             },
             { 
-                hn: "HN-65025",
+                hn: "6910002",
                 img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop", 
                 name: "น้องทองกวาว", 
                 breed: "เปอร์เซีย", 
@@ -463,8 +463,8 @@
         ];
 
         let appointments = [
-            { date: "2026-10-15", time: "10:00-12:00", hn: "HN-65024", service: "🩺 ตรวจสุขภาพประจำปี", doctor: "นพ.สพ.สมชาย", status: "เสร็จสิ้น" },
-            { date: "2026-10-15", time: "15:00-18:00", hn: "HN-65025", service: "💉 ฉีดวัคซีนรวม", doctor: "สพ.ญ.วิไล", status: "กำลังตรวจ" }
+            { date: "2026-10-15", time: "10:00-12:00", hn: "6910001", service: "🩺 ตรวจสุขภาพประจำปี", doctor: "นพ.สพ.สมชาย", status: "เสร็จสิ้น" },
+            { date: "2026-10-15", time: "15:00-18:00", hn: "6910002", service: "💉 ฉีดวัคซีนรวม", doctor: "สพ.ญ.วิไล", status: "กำลังตรวจ" }
         ];
 
         let currentStatusFilter = 'ทั้งหมด';
@@ -541,7 +541,7 @@
                     <td class="py-3.5 px-4"><img src="${p.img}" alt="${p.name}" class="w-10 h-10 rounded-full object-cover border border-[#C8DCD0] shadow-xs"></td>
                     <td class="py-3.5 px-4">
                         <div class="font-bold text-[#1B4332]">${p.name}</div>
-                        <div class="text-[11px] text-red-600 font-bold">${p.hn}</div>
+                        <div class="text-[11px] text-red-600 font-bold">HN: ${p.hn}</div>
                     </td>
                     <td class="py-3.5 px-4 text-gray-600">${p.breed}</td>
                     <td class="py-3.5 px-4 text-gray-600">${p.owner} (${p.phone})</td>
@@ -574,7 +574,7 @@
             document.getElementById('editPatientIndex').value = index;
             document.getElementById('inputPatientFile').value = "";
             if(index === -1) {
-                document.getElementById('patientModalTitle').innerText = "เพิ่มสมาชิกคนไข้ใหม่ (สร้าง HN อัตโนมัติ)";
+                document.getElementById('patientModalTitle').innerText = "เพิ่มสมาชิกคนไข้ใหม่ (สร้าง HN อัตโนมัติ YYMMXXX)";
                 document.getElementById('inputPatientName').value = "";
                 document.getElementById('inputPatientBreed').value = "";
                 document.getElementById('inputPatientOwner').value = "";
@@ -583,7 +583,7 @@
                 document.getElementById('inputPatientImgBase64').value = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
             } else {
                 let p = patients[index];
-                document.getElementById('patientModalTitle').innerText = `แก้ไขข้อมูลคนไข้ [${p.hn}]`;
+                document.getElementById('patientModalTitle').innerText = `แก้ไขข้อมูลคนไข้ [HN: ${p.hn}]`;
                 document.getElementById('inputPatientName').value = p.name;
                 document.getElementById('inputPatientBreed').value = p.breed;
                 document.getElementById('inputPatientOwner').value = `${p.owner} (${p.phone})`;
@@ -601,6 +601,22 @@
         function closePatientModal() {
             document.getElementById('patient-modal').classList.remove('flex');
             document.getElementById('patient-modal').classList.add('hidden');
+        }
+
+        // ฟังก์ชันสร้างเลข HN รูปแบบ YYMMXXX (เช่น 6910001)
+        function generateNewHN() {
+            let now = new Date();
+            let thaiYear = now.getFullYear() + 543; // แปลง ค.ศ. เป็น พ.ศ.
+            let yy = String(thaiYear).slice(-2); // เอาเลขท้าย 2 ตัว เช่น 2569 -> 69
+            let mm = String(now.getMonth() + 1).padStart(2, '0'); // เดือน 2 หลัก เช่น 10
+            let prefix = yy + mm; // ได้ 6910
+
+            // กรองหา HN ที่ขึ้นต้นด้วยปีและเดือนปัจจุบัน เพื่อหารันนิ่งเบอร์ล่าสุด
+            let currentMonthPatients = patients.filter(p => p.hn && p.hn.startsWith(prefix));
+            let nextSeq = currentMonthPatients.length + 1;
+            let xxx = String(nextSeq).padStart(3, '0'); // 3 หลัก เช่น 001, 002
+
+            return prefix + xxx; // ผลลัพธ์ 6910001
         }
 
         function savePatient() {
@@ -624,7 +640,7 @@
             let ownerPhone = ownerFull.includes('(') ? ownerFull.split('(')[1].replace(')', '').trim() : '-';
 
             if(editIndex === -1) {
-                let newHN = `HN-${65024 + patients.length + 1}`;
+                let newHN = generateNewHN();
                 patients.unshift({
                     hn: newHN,
                     img: img,
@@ -639,7 +655,7 @@
                     weight: weight,
                     history: []
                 });
-                alert(`สร้างสมาชิกใหม่สำเร็จ! เลขประจำตัว: ${newHN}`);
+                alert(`สร้างสมาชิกใหม่สำเร็จ! เลขประจำตัว HN: ${newHN}`);
             } else {
                 let p = patients[editIndex];
                 p.name = name;
@@ -675,7 +691,7 @@
             patients.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p.hn;
-                opt.innerText = `[${p.hn}] ${p.name} (${p.breed}) - เจ้าของ: ${p.owner}`;
+                opt.innerText = `[HN: ${p.hn}] ${p.name} (${p.breed}) - เจ้าของ: ${p.owner}`;
                 selectEl.appendChild(opt);
             });
 
@@ -697,7 +713,7 @@
             patients.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p.hn;
-                opt.innerText = `[${p.hn}] ${p.name} (${p.breed}) - เจ้าของ: ${p.owner}`;
+                opt.innerText = `[HN: ${p.hn}] ${p.name} (${p.breed}) - เจ้าของ: ${p.owner}`;
                 if(p.hn === item.hn) opt.selected = true;
                 selectEl.appendChild(opt);
             });
@@ -815,7 +831,7 @@
                     <td class="py-3.5 px-4 font-medium">${item.time}</td>
                     <td class="py-3.5 px-4">
                         <div class="font-bold text-[#1B4332]">${patient.name} (${patient.breed})</div>
-                        <div class="text-[11px] text-red-600 font-bold">${item.hn}</div>
+                        <div class="text-[11px] text-red-600 font-bold">HN: ${item.hn}</div>
                     </td>
                     <td class="py-3.5 px-4 text-gray-600">${patient.owner} (${patient.phone})</td>
                     <td class="py-3.5 px-4 text-gray-600">${item.service}</td>
@@ -921,7 +937,7 @@
             let fullAddress = `${p.subdistrict || ''} ${p.district || ''}`.trim() || 'อำเภอเมืองสุราษฎร์ธานี';
 
             document.getElementById('historyPetImg').src = p.img;
-            document.getElementById('historyPetName').innerText = `${p.name} (${p.breed}) [${p.hn}]`;
+            document.getElementById('historyPetName').innerText = `${p.name} (${p.breed}) [HN: ${p.hn}]`;
             document.getElementById('historyOwnerInfo').innerText = `เจ้าของ: ${p.owner} | โทร: ${p.phone} | ที่อยู่: ${fullAddress}`;
             document.getElementById('btnEditPatientFromHistory').setAttribute('onclick', `closeHistoryModal(); switchTab('patients'); openPatientModal(${index});`);
 
