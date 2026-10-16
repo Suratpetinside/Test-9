@@ -678,11 +678,71 @@
             document.getElementById('pDoctor').innerText = `${item.doctor}`;
             document.getElementById('printDate').innerText = item.date || "15 ต.ค. 2026";
             
-            document.getElementById('docNoteInput').value = "";
-            document.getElementById('docPriceInput').value = "300";
+            // ⭐ จุดที่แก้: ถ้ารายการนี้เคยบันทึกค่าไว้แล้ว ให้ดึงมาแสดงค้างไว้เหมือนเดิม ไม่ให้เคลียร์หาย
+            document.getElementById('docNoteInput').value = item.savedNote || "";
+            document.getElementById('docPriceInput').value = item.savedPrice || "300";
 
             document.getElementById('doctor-log-modal').classList.remove('hidden');
             document.getElementById('doctor-log-modal').classList.add('flex');
+        }
+
+        // 2. ปรับฟังก์ชันบันทึก ให้บันทึกค่าเก็บไว้ที่ตัว item ของคิวด้วย (savedNote / savedPrice)
+        function saveDoctorLog() {
+            let index = parseInt(document.getElementById('docQueueIndex').value);
+            let note = document.getElementById('docNoteInput').value.trim();
+            let price = document.getElementById('docPriceInput').value.trim() || "0";
+
+            if(!note) {
+                alert('กรุณากรอกบันทึกผลการตรวจ (SOAP) ก่อนบันทึก');
+                return;
+            }
+
+            let item = appointments[index];
+            let petName = item.pet.split('(')[0].trim();
+            
+            // บันทึกเก็บไว้ที่ตัวคิว เพื่อให้ข้อความยังค้างอยู่ในฟอร์มเวลาเปิดดูซ้ำ
+            item.savedNote = note;
+            item.savedPrice = price;
+
+            let newHistoryItem = {
+                date: item.date || "15 ต.ค. 2026",
+                service: item.service,
+                doctor: item.doctor,
+                note: note,
+                price: price
+            };
+
+            let foundPatient = patients.find(p => p.name.trim() === petName);
+            if(foundPatient) {
+                if(!foundPatient.history) foundPatient.history = [];
+                // เช็คว่าถ้าเคยบันทึกประวัติของวันนี้ไปแล้ว ให้ทับตัวล่าสุดแทนการเบิ้ลซ้ำ
+                let existingHistoryIndex = foundPatient.history.findIndex(h => h.date === item.date && h.service === item.service);
+                if(existingHistoryIndex !== -1) {
+                    foundPatient.history[existingHistoryIndex] = newHistoryItem;
+                } else {
+                    foundPatient.history.unshift(newHistoryItem);
+                }
+            } else {
+                patients.push({
+                    hn: `HN-${Math.floor(65030 + Math.random() * 1000)}`,
+                    img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop",
+                    name: petName,
+                    breed: item.pet.includes('(') ? item.pet.split('(')[1].replace(')', '').trim() : 'ทั่วไป',
+                    owner: item.owner.split('(')[0].trim(),
+                    phone: item.owner.includes('(') ? item.owner.split('(')[1].replace(')', '').trim() : '-',
+                    address: "อำเภอเมืองสุราษฎร์ธานี",
+                    age: '1 ปี',
+                    gender: 'ผู้',
+                    weight: '5.0 กก.',
+                    history: [newHistoryItem]
+                });
+            }
+
+            item.status = "เสร็จสิ้น";
+
+            alert('บันทึกประวัติการรักษาและอัปเดตเวชระเบียนเรียบร้อยแล้ว!');
+            closeDoctorLogModal();
+            renderTable();
         }
 
         function closeDoctorLogModal() {
