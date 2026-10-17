@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไขรายชื่อคนไข้ (รวมฟีเจอร์ถ่ายรูปบัตรประชาชน) -->
+    <!-- Modal เพิ่ม/แก้ไขรายชื่อคนไข้ (แยกส่วนรูปสัตว์เลี้ยง และ รูปบัตรประชาชนคนละบรรทัด) -->
     <div id="patient-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden items-center justify-center p-4 z-50 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#D8E6DD] my-8">
             <div class="flex justify-between items-center mb-4">
@@ -296,31 +296,47 @@
                     <input type="text" id="inputPatientWeight" placeholder="เช่น 5.2 กก." class="w-full p-2.5 border border-[#D8E6DD] rounded-xl focus:outline-none focus:border-[#2D6A4F] text-[#1B4332]">
                 </div>
 
-                <!-- 🪪 ส่วนเพิ่มสำหรับการถ่ายรูปบัตรประชาชน / อัปโหลดรูป -->
+                <!-- 🐾 บรรทัดที่ 1: รูปภาพสัตว์เลี้ยง -->
                 <div class="border border-[#D8E6DD] p-3 rounded-xl bg-[#F9FBF9] space-y-2">
-                    <label class="block text-gray-700 text-xs font-bold">🪪 รูปภาพสัตว์เลี้ยง / ถ่ายรูปบัตรประชาชนเจ้าของ</label>
-                    
+                    <label class="block text-gray-700 text-xs font-bold">🐶 1. รูปภาพสัตว์เลี้ยง</label>
                     <div class="flex items-center gap-2">
                         <input type="file" id="inputPatientFile" accept="image/*" class="w-full p-1.5 border border-[#D8E6DD] rounded-lg text-xs bg-white file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#2D6A4F] file:text-white hover:file:bg-[#1B4332] cursor-pointer">
-                        <button type="button" onclick="toggleCamera()" id="btnToggleCam" class="px-3 py-1.5 bg-[#2D6A4F] hover:bg-[#1B4332] text-white rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap">📷 เปิดกล้อง</button>
+                        <button type="button" onclick="togglePetCamera()" id="btnPetCam" class="px-3 py-1.5 bg-[#2D6A4F] hover:bg-[#1B4332] text-white rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap">📷 เปิดกล้อง</button>
                     </div>
-
-                    <!-- กล่องแสดงกล้องเว็บแคม -->
-                    <div id="cameraContainer" class="hidden flex flex-col items-center gap-2 pt-2">
-                        <video id="webcamVideo" autoplay playsinline class="w-full h-44 bg-black rounded-lg object-cover border border-[#C8DCD0]"></video>
-                        <button type="button" onclick="captureIDCard()" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium cursor-pointer shadow-xs">📸 กดถ่ายภาพบัตรประชาชน</button>
+                    <!-- กล้องถ่ายรูปสัตว์เลี้ยง -->
+                    <div id="petCameraContainer" class="hidden flex flex-col items-center gap-2 pt-1">
+                        <video id="petWebcamVideo" autoplay playsinline class="w-full h-36 bg-black rounded-lg object-cover border border-[#C8DCD0]"></video>
+                        <button type="button" onclick="capturePetPhoto()" class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium cursor-pointer shadow-xs">📸 ถ่ายรูปสัตว์เลี้ยง</button>
                     </div>
-
-                    <!-- Canvas ซ่อนไว้สำหรับแปลงรูปภาพ -->
-                    <canvas id="webcamCanvas" class="hidden"></canvas>
-
-                    <!-- แสดงตัวอย่างรูปภาพปัจจุบัน -->
+                    <canvas id="petCanvas" class="hidden"></canvas>
                     <div class="flex items-center gap-3 pt-1">
-                        <img id="previewImg" src="" alt="Preview" class="w-12 h-12 rounded-lg object-cover border border-[#C8DCD0] shadow-xs bg-white">
-                        <span id="imgStatusText" class="text-[11px] text-gray-500">ยังไม่มีการเลือกรูปภาพหรือถ่ายภาพ</span>
+                        <img id="previewPetImg" src="" alt="Pet Preview" class="w-10 h-10 rounded-lg object-cover border border-[#C8DCD0] shadow-xs bg-white">
+                        <span id="petImgStatus" class="text-[11px] text-gray-500">ยังไม่มีรูปสัตว์เลี้ยง</span>
                     </div>
-                    <input type="hidden" id="inputPatientImgBase64" value="">
                 </div>
+
+                <!-- 🪪 บรรทัดที่ 2: รูปบัตรประชาชนเจ้าของ -->
+                <div class="border border-[#D8E6DD] p-3 rounded-xl bg-[#F9FBF9] space-y-2">
+                    <label class="block text-gray-700 text-xs font-bold">🪪 2. รูปถ่ายบัตรประชาชนเจ้าของ</label>
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="inputIDCardFile" accept="image/*" class="w-full p-1.5 border border-[#D8E6DD] rounded-lg text-xs bg-white file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#2D6A4F] file:text-white hover:file:bg-[#1B4332] cursor-pointer">
+                        <button type="button" onclick="toggleIDCamera()" id="btnIDCam" class="px-3 py-1.5 bg-[#2D6A4F] hover:bg-[#1B4332] text-white rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap">📷 เปิดกล้อง</button>
+                    </div>
+                    <!-- กล้องถ่ายรูปบัตรประชาชน -->
+                    <div id="idCameraContainer" class="hidden flex flex-col items-center gap-2 pt-1">
+                        <video id="idWebcamVideo" autoplay playsinline class="w-full h-36 bg-black rounded-lg object-cover border border-[#C8DCD0]"></video>
+                        <button type="button" onclick="captureIDCardPhoto()" class="w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium cursor-pointer shadow-xs">📸 ถ่ายรูปบัตรประชาชน</button>
+                    </div>
+                    <canvas id="idCanvas" class="hidden"></canvas>
+                    <div class="flex items-center gap-3 pt-1">
+                        <img id="previewIDImg" src="" alt="ID Preview" class="w-10 h-10 rounded-lg object-cover border border-[#C8DCD0] shadow-xs bg-white">
+                        <span id="idImgStatus" class="text-[11px] text-gray-500">ยังไม่มีรูปบัตรประชาชน</span>
+                    </div>
+                </div>
+
+                <!-- ช่องเก็บค่า Base64 -->
+                <input type="hidden" id="inputPatientImgBase64" value="">
+                <input type="hidden" id="inputIDCardImgBase64" value="">
 
                 <div class="pt-3 flex justify-end gap-2">
                     <button onclick="closePatientModal()" class="px-4 py-2 border border-[#D8E6DD] rounded-xl text-gray-600 hover:bg-gray-50 cursor-pointer">ยกเลิก</button>
@@ -451,7 +467,6 @@
 
     <!-- JavaScript -->
     <script>
-        // ฟังก์ชันดึงวันที่ปัจจุบันในรูปแบบ YYYY-MM-DD
         function getTodayDateString() {
             let now = new Date();
             let yyyy = now.getFullYear();
@@ -460,7 +475,6 @@
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        // กำหนดค่า Default วันที่ปัจจุบันให้กับช่องเลือกวันที่หลักทันทีเมื่อโหลดหน้าเว็บ
         document.getElementById('filterDate').value = getTodayDateString();
         document.getElementById('inputPatientBirthDate').value = getTodayDateString();
 
@@ -468,6 +482,7 @@
             { 
                 hn: "6910001",
                 img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop", 
+                idCardImg: "",
                 name: "น้องหมีพู", 
                 breed: "ชิทู", 
                 owner: "คุณสมชาย", 
@@ -484,6 +499,7 @@
             { 
                 hn: "6910002",
                 img: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop", 
+                idCardImg: "",
                 name: "น้องทองกวาว", 
                 breed: "เปอร์เซีย", 
                 owner: "คุณหญิง", 
@@ -505,7 +521,9 @@
         let currentStatusFilter = 'ทั้งหมด';
         let currentPage = 1;
         const rowsPerPage = 10;
-        let webcamStream = null;
+        
+        let petStream = null;
+        let idStream = null;
 
         function logActivityToSheet(action, details, hn = "-", service = "-", status = "-") {
             console.log(`[Google Sheets Backup Log] | Action: ${action} | Details: ${details} | HN: ${hn} | Service: ${service} | Status: ${status}`);
@@ -518,7 +536,7 @@
             const secPatients = document.getElementById('sectionPatients');
             const dateWrapper = document.getElementById('dateFilterWrapper');
 
-            stopCamera(); // ปิดกล้องเมื่อย้ายแท็บ
+            stopAllCameras();
 
             if(tab === 'queue') {
                 btnQueue.className = "px-4 py-1.5 rounded-full font-medium transition cursor-pointer bg-[#2D6A4F] text-white shadow-sm text-xs";
@@ -600,7 +618,7 @@
             });
         }
 
-        // จัดการอัปโหลดไฟล์รูปจากเครื่อง
+        // --- จัดการรูปภาพสัตว์เลี้ยง ---
         document.getElementById('inputPatientFile').addEventListener('change', function(e) {
             let file = e.target.files[0];
             if (file) {
@@ -608,72 +626,130 @@
                 reader.onload = function(uploadE) {
                     let base64 = uploadE.target.result;
                     document.getElementById('inputPatientImgBase64').value = base64;
-                    document.getElementById('previewImg').src = base64;
-                    document.getElementById('imgStatusText').innerText = "อัปโหลดรูปภาพจากไฟล์เรียบร้อย";
+                    document.getElementById('previewPetImg').src = base64;
+                    document.getElementById('petImgStatus').innerText = "เลือกรูปสัตว์เลี้ยงจากไฟล์แล้ว";
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // 📷 ระบบเปิด/ปิดกล้องเว็บแคมสำหรับถ่ายรูปบัตรประชาชน
-        function toggleCamera() {
-            const camContainer = document.getElementById('cameraContainer');
-            const videoEl = document.getElementById('webcamVideo');
-            const btnCam = document.getElementById('btnToggleCam');
+        function togglePetCamera() {
+            const container = document.getElementById('petCameraContainer');
+            const video = document.getElementById('petWebcamVideo');
+            const btn = document.getElementById('btnPetCam');
 
-            if (webcamStream) {
-                stopCamera();
-                camContainer.classList.add('hidden');
-                btnCam.innerText = "📷 เปิดกล้อง";
+            if (petStream) {
+                stopPetCamera();
             } else {
                 navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
                     .then(stream => {
-                        webcamStream = stream;
-                        videoEl.srcObject = stream;
-                        camContainer.classList.remove('hidden');
-                        btnCam.innerText = "❌ ปิดกล้อง";
-                        document.getElementById('imgStatusText').innerText = "กำลังเปิดกล้องเว็บแคม...";
+                        petStream = stream;
+                        video.srcObject = stream;
+                        container.classList.remove('hidden');
+                        btn.innerText = "❌ ปิดกล้องสัตว์";
+                        document.getElementById('petImgStatus').innerText = "กำลังเปิดกล้องถ่ายสัตว์เลี้ยง...";
                     })
                     .catch(err => {
-                        console.error("Camera Error:", err);
-                        alert("ไม่สามารถเปิดใช้งานกล้องเว็บแคมได้ กรุณาตรวจสอบการอนุญาตสิทธิ์เข้าถึงกล้องของเบราว์เซอร์");
+                        alert("ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตสิทธิ์");
                     });
             }
         }
 
-        function stopCamera() {
-            if (webcamStream) {
-                webcamStream.getTracks().forEach(track => track.stop());
-                webcamStream = null;
+        function stopPetCamera() {
+            if (petStream) {
+                petStream.getTracks().forEach(track => track.stop());
+                petStream = null;
             }
-            document.getElementById('cameraContainer').classList.add('hidden');
-            document.getElementById('btnToggleCam').innerText = "📷 เปิดกล้อง";
+            document.getElementById('petCameraContainer').classList.add('hidden');
+            document.getElementById('btnPetCam').innerText = "📷 เปิดกล้อง";
         }
 
-        // กดถ่ายภาพจากวิดีโอเว็บแคม
-        function captureIDCard() {
-            const videoEl = document.getElementById('webcamVideo');
-            const canvasEl = document.getElementById('webcamCanvas');
-            
-            canvasEl.width = videoEl.videoWidth || 640;
-            canvasEl.height = videoEl.videoHeight || 480;
-            let ctx = canvasEl.getContext('2d');
-            ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-
-            let dataURL = canvasEl.toDataURL('image/png');
+        function capturePetPhoto() {
+            const video = document.getElementById('petWebcamVideo');
+            const canvas = document.getElementById('petCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let dataURL = canvas.toDataURL('image/png');
             document.getElementById('inputPatientImgBase64').value = dataURL;
-            document.getElementById('previewImg').src = dataURL;
-            document.getElementById('imgStatusText').innerText = "ถ่ายภาพบัตรประชาชน/สัตว์เลี้ยงจากกล้องเรียบร้อย";
+            document.getElementById('previewPetImg').src = dataURL;
+            document.getElementById('petImgStatus').innerText = "ถ่ายรูปสัตว์เลี้ยงจากกล้องเรียบร้อย";
+            stopPetCamera();
+        }
 
-            stopCamera();
+        // --- จัดการรูปบัตรประชาชนเจ้าของ ---
+        document.getElementById('inputIDCardFile').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(uploadE) {
+                    let base64 = uploadE.target.result;
+                    document.getElementById('inputIDCardImgBase64').value = base64;
+                    document.getElementById('previewIDImg').src = base64;
+                    document.getElementById('idImgStatus').innerText = "เลือกรูปบัตรประชาชนจากไฟล์แล้ว";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function toggleIDCamera() {
+            const container = document.getElementById('idCameraContainer');
+            const video = document.getElementById('idWebcamVideo');
+            const btn = document.getElementById('btnIDCam');
+
+            if (idStream) {
+                stopIDCamera();
+            } else {
+                navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
+                    .then(stream => {
+                        idStream = stream;
+                        video.srcObject = stream;
+                        container.classList.remove('hidden');
+                        btn.innerText = "❌ ปิดกล้องบัตร";
+                        document.getElementById('idImgStatus').innerText = "กำลังเปิดกล้องถ่ายบัตรประชาชน...";
+                    })
+                    .catch(err => {
+                        alert("ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตสิทธิ์");
+                    });
+            }
+        }
+
+        function stopIDCamera() {
+            if (idStream) {
+                idStream.getTracks().forEach(track => track.stop());
+                idStream = null;
+            }
+            document.getElementById('idCameraContainer').classList.add('hidden');
+            document.getElementById('btnIDCam').innerText = "📷 เปิดกล้อง";
+        }
+
+        function captureIDCardPhoto() {
+            const video = document.getElementById('idWebcamVideo');
+            const canvas = document.getElementById('idCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let dataURL = canvas.toDataURL('image/png');
+            document.getElementById('inputIDCardImgBase64').value = dataURL;
+            document.getElementById('previewIDImg').src = dataURL;
+            document.getElementById('idImgStatus').innerText = "ถ่ายรูปบัตรประชาชนเรียบร้อย";
+            stopIDCamera();
+        }
+
+        function stopAllCameras() {
+            stopPetCamera();
+            stopIDCamera();
         }
 
         function openPatientModal(index = -1) {
             document.getElementById('editPatientIndex').value = index;
             document.getElementById('inputPatientFile').value = "";
-            stopCamera();
+            document.getElementById('inputIDCardFile').value = "";
+            stopAllCameras();
 
-            let defaultImg = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
+            let defaultPetImg = "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
 
             if(index === -1) {
                 document.getElementById('patientModalTitle').innerText = "เพิ่มสมาชิกคนไข้ใหม่ (สร้าง HN อัตโนมัติ YYMMXXX)";
@@ -683,9 +759,14 @@
                 document.getElementById('inputPatientSubdistrict').value = "";
                 document.getElementById('inputPatientWeight').value = "";
                 document.getElementById('inputPatientBirthDate').value = getTodayDateString();
-                document.getElementById('inputPatientImgBase64').value = defaultImg;
-                document.getElementById('previewImg').src = defaultImg;
-                document.getElementById('imgStatusText').innerText = "ใช้รูปเริ่มต้นหรือเลือกอัปโหลด/ถ่ายภาพ";
+                
+                document.getElementById('inputPatientImgBase64').value = defaultPetImg;
+                document.getElementById('previewPetImg').src = defaultPetImg;
+                document.getElementById('petImgStatus').innerText = "ใช้รูปเริ่มต้นหรือเลือกอัปโหลด/ถ่ายใหม่";
+
+                document.getElementById('inputIDCardImgBase64').value = "";
+                document.getElementById('previewIDImg').src = "";
+                document.getElementById('idImgStatus').innerText = "ยังไม่มีรูปบัตรประชาชน";
             } else {
                 let p = patients[index];
                 document.getElementById('patientModalTitle').innerText = `แก้ไขข้อมูลคนไข้ [HN: ${p.hn}]`;
@@ -697,16 +778,21 @@
                 document.getElementById('inputPatientBirthDate').value = p.birthDate;
                 document.getElementById('inputPatientGender').value = p.gender;
                 document.getElementById('inputPatientWeight').value = p.weight;
+
                 document.getElementById('inputPatientImgBase64').value = p.img;
-                document.getElementById('previewImg').src = p.img;
-                document.getElementById('imgStatusText').innerText = "รูปเวชระเบียนปัจจุบัน";
+                document.getElementById('previewPetImg').src = p.img;
+                document.getElementById('petImgStatus').innerText = "รูปสัตว์เลี้ยงปัจจุบัน";
+
+                document.getElementById('inputIDCardImgBase64').value = p.idCardImg || "";
+                document.getElementById('previewIDImg').src = p.idCardImg || "";
+                document.getElementById('idImgStatus').innerText = p.idCardImg ? "มีรูปบัตรประชาชนแล้ว" : "ยังไม่มีรูปบัตรประชาชน";
             }
             document.getElementById('patient-modal').classList.remove('hidden');
             document.getElementById('patient-modal').classList.add('flex');
         }
 
         function closePatientModal() {
-            stopCamera();
+            stopAllCameras();
             document.getElementById('patient-modal').classList.remove('flex');
             document.getElementById('patient-modal').classList.add('hidden');
         }
@@ -736,6 +822,7 @@
             let gender = document.getElementById('inputPatientGender').value;
             let weight = document.getElementById('inputPatientWeight').value.trim();
             let img = document.getElementById('inputPatientImgBase64').value.trim() || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop";
+            let idCardImg = document.getElementById('inputIDCardImgBase64').value.trim();
 
             if(!name || !ownerFull) {
                 alert('กรุณากรอกชื่อสัตว์เลี้ยงและชื่อเจ้าของให้ครบถ้วน');
@@ -750,6 +837,7 @@
                 patients.unshift({
                     hn: newHN,
                     img: img,
+                    idCardImg: idCardImg,
                     name: name,
                     breed: breed,
                     owner: ownerName,
@@ -775,6 +863,7 @@
                 p.gender = gender;
                 p.weight = weight;
                 p.img = img;
+                if(idCardImg) p.idCardImg = idCardImg;
                 logActivityToSheet("UPDATE_PATIENT", `แก้ไขข้อมูลคนไข้ ${name}`, p.hn, "เวชระเบียน", "สำเร็จ");
                 alert('อัปเดตข้อมูลคนไข้เรียบร้อยแล้ว!');
             }
