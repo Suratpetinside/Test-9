@@ -129,13 +129,7 @@
                 let fullAddress = `${p.subdistrict || ''} ${p.district || ''}`.trim() || 'อำเภอเมืองสุราษฎร์ธานี';
 
                 let tr = document.createElement('tr');
-                tr.className = "hover:bg-[#F8FAF8] transition cursor-pointer";
-                tr.onclick = (e) => {
-                    // ป้องกันไม่ให้ทับซ้อนกับการคลิกปุ่มเฉพาะกิจในคอลัมน์จัดการ
-                    if(e.target.tagName !== 'BUTTON') {
-                        openHistoryModal(realIndex);
-                    }
-                };
+                tr.className = "hover:bg-[#F8FAF8] transition";
                 tr.innerHTML = `
                     <td class="py-3.5 px-4"><img src="${p.img}" alt="${p.name}" class="w-10 h-10 rounded-full object-cover border border-[#C8DCD0] shadow-xs"></td>
                     <td class="py-3.5 px-4">
@@ -149,8 +143,8 @@
                     <td class="py-3.5 px-4 text-gray-600">${p.gender}</td>
                     <td class="py-3.5 px-4 font-semibold text-[#2D6A4F]">${p.weight}</td>
                     <td class="py-3.5 px-4 text-center space-x-1">
-                        <button onclick="openHistoryModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-emerald-700 transition cursor-pointer" title="ดูประวัติการรักษา">📋</button>
-                        <button onclick="openPatientModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-gray-600 transition cursor-pointer" title="แก้ไขข้อมูล">✏️</button>
+                        <button onclick="openHistoryModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-emerald-700 transition cursor-pointer" title="ประวัติการรักษา">📋</button>
+                        <button onclick="openPatientModal(${realIndex})" class="p-1.5 hover:bg-[#E2EBE5] rounded-lg text-gray-600 transition cursor-pointer" title="แก้ไข">✏️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -684,37 +678,25 @@
             let container = document.getElementById('historyListContainer');
             container.innerHTML = '';
 
-            // เพิ่มส่วนแสดงรูปบัตรประชาชน (ถ้ามี) ในหน้าต่างประวัติ
-            let idCardSectionHTML = '';
-            if (p.idCardImg) {
-                idCardSectionHTML = `
-                    <div class="bg-[#F8FAF8] p-3 rounded-xl border border-[#D8E6DD] text-xs space-y-2 mb-3">
-                        <div class="font-bold text-[#1B4332]">🪪 รูปถ่ายบัตรประชาชนเจ้าของ</div>
-                        <img src="${p.idCardImg}" alt="ID Card" class="w-full max-h-40 object-contain rounded-lg border border-[#C8DCD0] bg-white">
-                    </div>
-                `;
-            }
-
             if(!p.history || p.history.length === 0) {
-                container.innerHTML = idCardSectionHTML + `<div class="text-center py-6 text-gray-400 text-xs">ยังไม่มีประวัติการรักษาในระบบ</div>`;
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 text-xs">ยังไม่มีประวัติการรักษาในระบบ</div>`;
             } else {
-                let historyHTML = idCardSectionHTML;
                 p.history.forEach((h) => {
-                    historyHTML += `
-                        <div class="bg-[#F8FAF8] p-3 rounded-xl border border-[#D8E6DD] text-xs space-y-1 mb-2">
-                            <div class="flex justify-between items-center font-bold text-[#1B4332]">
-                                <span>${h.service}</span>
-                                <span class="text-gray-500 font-normal">📅 ${h.date}</span>
-                            </div>
-                            <div class="text-gray-600 flex justify-between">
-                                <span>🩺 แพทย์: <span class="font-medium text-[#2D6A4F]">${h.doctor}</span></span>
-                                <span class="font-bold text-[#2D6A4F]">💰 ค่ารักษา: ${h.price} บาท</span>
-                            </div>
-                            <div class="text-gray-500 bg-white p-2 rounded-lg border border-[#E9F2EC] mt-1">📝 บันทึก: ${h.note}</div>
+                    let div = document.createElement('div');
+                    div.className = "bg-[#F8FAF8] p-3 rounded-xl border border-[#D8E6DD] text-xs space-y-1";
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center font-bold text-[#1B4332]">
+                            <span>${h.service}</span>
+                            <span class="text-gray-500 font-normal">📅 ${h.date}</span>
                         </div>
+                        <div class="text-gray-600 flex justify-between">
+                            <span>🩺 แพทย์: <span class="font-medium text-[#2D6A4F]">${h.doctor}</span></span>
+                            <span class="font-bold text-[#2D6A4F]">💰 ค่ารักษา: ${h.price} บาท</span>
+                        </div>
+                        <div class="text-gray-500 bg-white p-2 rounded-lg border border-[#E9F2EC] mt-1">📝 บันทึก: ${h.note}</div>
                     `;
+                    container.appendChild(div);
                 });
-                container.innerHTML = historyHTML;
             }
 
             document.getElementById('history-modal').classList.remove('hidden');
